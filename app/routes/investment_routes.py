@@ -60,11 +60,13 @@ def init_investment_routes(api):
             user = User.objects(user_id=current_user).first()
             data = request.json
             risk_level = data.get("risk_level", "medium")
+            internal_position = data.get("internal_position", 0)
             try:
                 investment = InvestmentService.create_investment(
                     name=data["name"],
                     coin_type=data["coin_type"],
                     initial_amount=data["initial_amount"],
+                    internal_position=internal_position,
                     risk_level=risk_level,
                     user=user,
                 )

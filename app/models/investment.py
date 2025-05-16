@@ -6,6 +6,7 @@ from mongoengine import (
     ReferenceField,
     ListField,
     DictField,
+    IntField,
 )
 from datetime import datetime
 from typing import Dict, Optional
@@ -19,6 +20,7 @@ class Investment(Document):
     entry_price_usdt = FloatField(required=True, description="Entry price in USDT")
 
     current_profit = FloatField(default=0.0)
+    internal_position = IntField(required=True, description="Internal position number")
     created_at = DateTimeField(default=datetime.utcnow)
     updated_at = DateTimeField(default=datetime.utcnow)
 
@@ -56,6 +58,7 @@ class Investment(Document):
             "initial_amount": self.initial_amount,
             "entry_price_usdt": self.entry_price_usdt,
             "current_profit": self.current_profit,
+            "internal_position": self.internal_position,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "transactions": transactions,
@@ -70,6 +73,7 @@ class Investment(Document):
             initial_amount=data["initial_amount"],
             entry_price_usdt=data["entry_price_usdt"],
             current_profit=data.get("current_profit", 0.0),
+            internal_position=data["internal_position"],
         )
         investment.created_at = data.get("created_at", datetime.utcnow())
         investment.updated_at = data.get("updated_at", datetime.utcnow())

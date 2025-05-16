@@ -12,6 +12,7 @@ class InvestmentService:
         coin_type: str,
         risk_level: str,
         initial_amount: float,
+        internal_position: int,
         user: User,
     ) -> Investment:
         """새로운 투자를 생성합니다."""
@@ -35,6 +36,7 @@ class InvestmentService:
             initial_amount=initial_amount,
             entry_price_usdt=current_price,
             current_profit=0.0,
+            internal_position=internal_position,
         )
         # 초기 투자를 거래 내역에 추가
         investment.transactions.append(
