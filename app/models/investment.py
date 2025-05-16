@@ -16,6 +16,7 @@ class Investment(Document):
     coin_type = StringField(required=True, choices=["BTC", "ETH", "SOL"])
     risk_level = StringField(required=True, choices=["low", "medium", "high"])
     initial_amount = FloatField(required=True)
+    entry_price_usdt = FloatField(required=True, description="Entry price in USDT")
 
     current_profit = FloatField(default=0.0)
     created_at = DateTimeField(default=datetime.utcnow)
@@ -53,6 +54,7 @@ class Investment(Document):
             "coin_type": self.coin_type,
             "risk_level": self.risk_level,
             "initial_amount": self.initial_amount,
+            "entry_price_usdt": self.entry_price_usdt,
             "current_profit": self.current_profit,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
@@ -66,6 +68,7 @@ class Investment(Document):
             coin_type=data["coin_type"],
             risk_level=data["risk_level"],
             initial_amount=data["initial_amount"],
+            entry_price_usdt=data["entry_price_usdt"],
             current_profit=data.get("current_profit", 0.0),
         )
         investment.created_at = data.get("created_at", datetime.utcnow())

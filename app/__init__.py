@@ -43,8 +43,8 @@ def create_app():
     api = Api(
         app,
         version="1.0",
-        title="Crypto Wallet API",
-        description="API for cryptocurrency wallet operations",
+        title="Bitree API",
+        description="API for Bitree operations",
         doc="/api/swagger",
     )
 

@@ -2,6 +2,7 @@ from typing import List, Optional, Dict
 from datetime import datetime
 from ..models.investment import Investment
 from ..models.user import User
+from .binance_service import BinanceService
 
 
 class InvestmentService:
@@ -11,13 +12,28 @@ class InvestmentService:
         coin_type: str,
         risk_level: str,
         initial_amount: float,
+        user: User,
     ) -> Investment:
         """새로운 투자를 생성합니다."""
+        # 사용자의 USDT 잔액 확인
+        if user.usdt_balance < initial_amount:
+            raise ValueError("잔액이 부족합니다.")
+
+        # USDT 잔액 차감
+        user.usdt_balance -= initial_amount
+        user.save()
+
+        # 현재 BTC 가격 가져오기
+        current_price = BinanceService.get_btc_price()
+        if current_price is None:
+            raise ValueError("현재 BTC 가격을 가져올 수 없습니다.")
+
         investment = Investment(
             name=name,
             coin_type=coin_type,
             risk_level=risk_level,
             initial_amount=initial_amount,
+            entry_price_usdt=current_price,
             current_profit=0.0,
         )
         # 초기 투자를 거래 내역에 추가
@@ -59,10 +75,15 @@ class InvestmentService:
             return None
 
     @staticmethod
-    def delete_investment(investment_id: str) -> bool:
+    def delete_investment(investment_id: str, user: User) -> bool:
         """투자를 삭제합니다."""
         try:
             investment = Investment.objects.get(id=investment_id)
+
+            # 투자 금액을 사용자의 USDT 잔액에 환불
+            user.usdt_balance += investment.initial_amount
+            user.save()
+
             investment.delete()
             return True
         except Investment.DoesNotExist:

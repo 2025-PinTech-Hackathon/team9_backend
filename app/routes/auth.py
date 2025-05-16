@@ -121,10 +121,7 @@ def init_auth_routes(auth_service: AuthService, api):
             """Get user details and investments"""
             current_user_id = get_jwt_identity()
             try:
-                print(current_user_id)
                 user = auth_service.get_user_by_id(current_user_id)
-                print(user)
-                input()
                 if not user:
                     return {"message": "User not found"}, 404
 

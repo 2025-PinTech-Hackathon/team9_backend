@@ -23,6 +23,9 @@ def init_investment_routes(api):
             "initial_amount": fields.Float(
                 required=True, description="Initial investment amount"
             ),
+            "entry_price_usdt": fields.Float(
+                required=True, description="Entry price in USDT"
+            ),
         },
     )
 
@@ -57,19 +60,23 @@ def init_investment_routes(api):
             user = User.objects(user_id=current_user).first()
             data = request.json
             risk_level = data.get("risk_level", "medium")
-            investment = InvestmentService.create_investment(
-                name=data["name"],
-                coin_type=data["coin_type"],
-                initial_amount=data["initial_amount"],
-                risk_level=risk_level,
-            )
-            user.investments.append(investment)
-            user.save()
+            try:
+                investment = InvestmentService.create_investment(
+                    name=data["name"],
+                    coin_type=data["coin_type"],
+                    initial_amount=data["initial_amount"],
+                    risk_level=risk_level,
+                    user=user,
+                )
+                user.investments.append(investment)
+                user.save()
 
-            return {
-                "message": "Investment created successfully",
-                "investment": investment.to_dict(),
-            }, 201
+                return {
+                    "message": "Investment created successfully",
+                    "investment": investment.to_dict(),
+                }, 201
+            except ValueError as e:
+                return {"error": str(e)}, 400
 
         @ns.doc("get_user_investments")
         @ns.response(
@@ -110,28 +117,6 @@ def init_investment_routes(api):
                 "investment": investment.to_dict(),
             }
 
-        @ns.doc("update_investment")
-        @ns.response(200, "Investment updated successfully", investment_response)
-        @ns.response(
-            404,
-            "Investment not found",
-            api.model("ErrorResponse", {"error": fields.String()}),
-        )
-        @jwt_required()
-        def put(self, investment_id: str):
-            """투자의 수익을 업데이트합니다."""
-            current_user = get_jwt_identity()
-            data = request.json
-            investment = InvestmentService.update_investment_profit(
-                investment_id=investment_id, new_profit=data["current_profit"]
-            )
-            if not investment or investment.user.id != current_user.id:
-                return {"error": "Investment not found"}, 404
-            return {
-                "message": "Investment updated successfully",
-                "investment": investment.to_dict(),
-            }
-
         @ns.doc("delete_investment")
         @ns.response(200, "Investment deleted successfully")
         @ns.response(
@@ -143,10 +128,11 @@ def init_investment_routes(api):
         def delete(self, investment_id: str):
             """투자를 삭제합니다."""
             current_user = get_jwt_identity()
+            user = User.objects(user_id=current_user).first()
             investment = InvestmentService.get_investment(investment_id)
             if not investment or investment.user.id != current_user.id:
                 return {"error": "Investment not found"}, 404
-            InvestmentService.delete_investment(investment_id)
+            InvestmentService.delete_investment(investment_id, user)
             return {"message": "Investment deleted successfully"}, 200
 
     @ns.route("/coin/<coin_type>")
