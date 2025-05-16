@@ -9,6 +9,8 @@ import freqtrade.vendor.qtpylib.indicators as qtpylib
 import numpy as np
 import requests
 
+remote_server_url = "http://172.100.4.91:5000"
+
 
 class config_high_risk_strategy(IStrategy):
     INTERFACE_VERSION: int = 3
@@ -67,7 +69,7 @@ class config_high_risk_strategy(IStrategy):
             profit_usd = round(trade.stake_amount * current_profit, 2)
 
             requests.get(
-                "http://localhost:5000/trade/callback/sell",  # url
+                f"{remote_server_url}/trade/callback/sell",  # url
                 params={
                     "risk_level": "high",
                     # "pair": pair,
