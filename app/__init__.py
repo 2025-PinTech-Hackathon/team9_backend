@@ -4,11 +4,10 @@ from flask_cors import CORS
 from flask_restx import Api
 from app.database import init_db
 from app.services.auth_service import AuthService
-from app.services.wallet_service import WalletService
 from app.routes.auth import auth_bp, init_auth_routes
-from app.routes.wallet import wallet_bp, init_wallet_routes
 from app.routes.investment_routes import investment_bp, init_investment_routes
 from app.routes.trade import trade_bp, init_trade_routes
+from app.routes.wallet import wallet_bp, init_wallet_routes
 from app.schemas import init_schemas
 import os
 from dotenv import load_dotenv
@@ -39,7 +38,6 @@ def create_app():
 
     # 서비스 초기화
     auth_service = AuthService()
-    wallet_service = WalletService()
 
     # Create a single API instance
     api = Api(
@@ -52,17 +50,17 @@ def create_app():
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix="/api")
-    app.register_blueprint(wallet_bp, url_prefix="/api/wallet")
     app.register_blueprint(investment_bp, url_prefix="/api/investments")
+    app.register_blueprint(wallet_bp, url_prefix="/api/wallet")
 
     # 스키마 초기화
     schemas = init_schemas(api)
 
     # 라우트 초기화
     init_auth_routes(auth_service, api)
-    init_wallet_routes(api)
     init_investment_routes(api)
     init_trade_routes(api)
+    init_wallet_routes(api)
 
     # Configure Swagger UI
     app.config["SWAGGER_UI_DOC_EXPANSION"] = "list"

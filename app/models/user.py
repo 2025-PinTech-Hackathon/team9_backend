@@ -23,10 +23,8 @@ class User(Document):
     created_at = DateTimeField(default=datetime.utcnow)
     updated_at = DateTimeField(default=datetime.utcnow)
 
-    # 지갑 잔액 필드
-    bitcoin_balance = FloatField(default=0.0)
-    ethereum_balance = FloatField(default=0.0)
-    solana_balance = FloatField(default=0.0)
+    # USDT 잔액 필드
+    usdt_balance = FloatField(default=0.0)
 
     # 가지고있는 Investment 목록
     investments = ListField(ReferenceField(Investment), default=list)
@@ -55,9 +53,7 @@ class User(Document):
             "password": self.password,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "bitcoin_balance": self.bitcoin_balance,
-            "ethereum_balance": self.ethereum_balance,
-            "solana_balance": self.solana_balance,
+            "usdt_balance": self.usdt_balance,
             "investments": [inv.to_dict() for inv in self.investments],
             # "transactions": self.transactions,
         }
@@ -67,9 +63,7 @@ class User(Document):
         user = cls(email=data["email"], password=data["password"])
         user.created_at = datetime.fromisoformat(data["created_at"])
         user.updated_at = datetime.fromisoformat(data["updated_at"])
-        user.bitcoin_balance = data["bitcoin_balance"]
-        user.ethereum_balance = data["ethereum_balance"]
-        user.solana_balance = data["solana_balance"]
+        user.usdt_balance = data["usdt_balance"]
         user.investments = [Investment.from_dict(inv) for inv in data["investments"]]
         # user.transactions = data["transactions"]
         return user

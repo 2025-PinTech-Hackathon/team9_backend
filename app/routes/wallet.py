@@ -5,10 +5,8 @@
 from flask import Blueprint, jsonify, request
 from flask_restx import Resource, Namespace, fields
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.config.wallet_addresses import WALLET_ADDRESSES
 from app.models.user import User
-from datetime import datetime
-from ..services.wallet_service import WalletService
+from app.models.usdt_transaction import USDTTransaction
 
 wallet_bp = Blueprint("wallet", __name__)
 ns = Namespace("wallet", description="Wallet operations")
@@ -17,100 +15,9 @@ ns = Namespace("wallet", description="Wallet operations")
 def init_wallet_routes(api):
     api.add_namespace(ns)
 
-    # Wallet schemas
-    wallet_response = api.model(
-        "WalletResponse",
-        {
-            "address": fields.String(description="Wallet address"),
-            "message": fields.String(description="Response message"),
-        },
-    )
-
     error_response = api.model(
         "ErrorResponse", {"error": fields.String(description="Error message")}
     )
-
-    @ns.route("/addresses")
-    class WalletAddresses(Resource):
-        @ns.doc(security="Bearer Auth")
-        @ns.response(200, "Wallet addresses retrieved successfully")
-        @ns.response(401, "Unauthorized", error_response)
-        @jwt_required()
-        def get(self):
-            """Get fixed wallet addresses for deposits"""
-            return {
-                "addresses": WALLET_ADDRESSES,
-                "message": "Wallet addresses retrieved successfully",
-            }, 200
-
-    @ns.route("/deposit")
-    class Deposit(Resource):
-        @ns.doc("make_deposit")
-        @ns.response(200, "Deposit successful", wallet_response)
-        @ns.response(400, "Invalid input", error_response)
-        @ns.response(401, "Unauthorized", error_response)
-        @jwt_required()
-        def post(self):
-            """Make a deposit to the wallet"""
-            current_user = get_jwt_identity()
-            data = request.json
-            try:
-                result = WalletService.make_deposit(
-                    current_user, data["amount"], data["coin_type"]
-                )
-                return {
-                    "message": "Deposit successful",
-                    "address": result["address"],
-                }
-            except ValueError as e:
-                return {"error": str(e)}, 400
-
-    @ns.route("/withdraw")
-    class Withdraw(Resource):
-        @ns.doc("make_withdrawal")
-        @ns.response(200, "Withdrawal successful", wallet_response)
-        @ns.response(400, "Invalid input", error_response)
-        @ns.response(401, "Unauthorized", error_response)
-        @jwt_required()
-        def post(self):
-            """Make a withdrawal from the wallet"""
-            current_user = get_jwt_identity()
-            data = request.json
-            try:
-                result = WalletService.make_withdrawal(
-                    current_user, data["amount"], data["coin_type"]
-                )
-                return {
-                    "message": "Withdrawal successful",
-                    "address": result["address"],
-                }
-            except ValueError as e:
-                return {"error": str(e)}, 400
-
-    @ns.route("/balance/<string:coin_type>")
-    class Balance(Resource):
-        @ns.doc(security="Bearer Auth")
-        @ns.response(200, "Balance retrieved successfully")
-        @ns.response(401, "Unauthorized", error_response)
-        @ns.response(400, "Invalid coin type", error_response)
-        @jwt_required()
-        def get(self, coin_type):
-            """Get balance for a specific coin"""
-            if coin_type not in WALLET_ADDRESSES:
-                return {"message": "Invalid coin type"}, 400
-
-            user_id = get_jwt_identity()
-            user = User.objects(id=user_id).first()
-            if not user:
-                return {"message": "User not found"}, 404
-
-            balance_field = f"{coin_type}_balance"
-            balance = getattr(user, balance_field, 0.0)
-            return {
-                "coin_type": coin_type,
-                "balance": balance,
-                "message": f"{coin_type.capitalize()} balance retrieved successfully",
-            }, 200
 
     @ns.route("/transactions")
     class Transactions(Resource):
@@ -120,12 +27,128 @@ def init_wallet_routes(api):
         @jwt_required()
         def get(self):
             """Get user's transaction history"""
-            user_id = get_jwt_identity()
-            user = User.objects(id=user_id).first()
-            if not user:
-                return {"message": "User not found"}, 404
+            try:
+                user_id = get_jwt_identity()
+                user = User.objects.get(user_id=user_id)
 
-            return {
-                "transactions": user.transactions,
-                "message": "Transactions retrieved successfully",
-            }, 200
+                # 페이지네이션 파라미터
+                page = int(request.args.get("page", 1))
+                per_page = int(request.args.get("per_page", 10))
+
+                # 거래 내역 조회
+                transactions = (
+                    USDTTransaction.objects(user=user)
+                    .order_by("-created_at")
+                    .skip((page - 1) * per_page)
+                    .limit(per_page)
+                )
+
+                return {
+                    "transactions": [t.to_dict() for t in transactions],
+                    "page": page,
+                    "per_page": per_page,
+                }, 200
+
+            except Exception as e:
+                return {"error": str(e)}, 500
+
+    @ns.route("/deposit")
+    class Deposit(Resource):
+        @ns.doc(security="Bearer Auth")
+        @ns.response(200, "Deposit successful")
+        @ns.response(400, "Invalid amount", error_response)
+        @ns.response(401, "Unauthorized", error_response)
+        @jwt_required()
+        def post(self):
+            """Deposit USDT"""
+            try:
+                data = request.get_json()
+                amount = float(data.get("amount", 0))
+
+                if amount <= 0:
+                    return {"error": "입금 금액은 0보다 커야 합니다."}, 400
+
+                user_id = get_jwt_identity()
+                user = User.objects.get(user_id=user_id)
+
+                # USDT 잔액 업데이트
+                user.usdt_balance += amount
+                user.save()
+
+                # 거래 내역 생성
+                transaction = USDTTransaction(
+                    user=user,
+                    amount=amount,
+                    transaction_type="deposit",
+                    status="completed",
+                ).save()
+
+                return {
+                    "message": "입금이 완료되었습니다.",
+                    "transaction": transaction.to_dict(),
+                    "new_balance": user.usdt_balance,
+                }, 200
+
+            except Exception as e:
+                return {"error": str(e)}, 500
+
+    @ns.route("/withdraw")
+    class Withdraw(Resource):
+        @ns.doc(security="Bearer Auth")
+        @ns.response(200, "Withdrawal successful")
+        @ns.response(400, "Invalid amount or insufficient balance", error_response)
+        @ns.response(401, "Unauthorized", error_response)
+        @jwt_required()
+        def post(self):
+            """Withdraw USDT"""
+            try:
+                data = request.get_json()
+                amount = float(data.get("amount", 0))
+
+                if amount <= 0:
+                    return {"error": "출금 금액은 0보다 커야 합니다."}, 400
+
+                user_id = get_jwt_identity()
+                user = User.objects.get(user_id=user_id)
+
+                # 잔액 확인
+                if user.usdt_balance < amount:
+                    return {"error": "잔액이 부족합니다."}, 400
+
+                # USDT 잔액 업데이트
+                user.usdt_balance -= amount
+                user.save()
+
+                # 거래 내역 생성
+                transaction = USDTTransaction(
+                    user=user,
+                    amount=-amount,  # 출금은 음수로 저장
+                    transaction_type="withdraw",
+                    status="completed",
+                ).save()
+
+                return {
+                    "message": "출금이 완료되었습니다.",
+                    "transaction": transaction.to_dict(),
+                    "new_balance": user.usdt_balance,
+                }, 200
+
+            except Exception as e:
+                return {"error": str(e)}, 500
+
+    @ns.route("/balance")
+    class Balance(Resource):
+        @ns.doc(security="Bearer Auth")
+        @ns.response(200, "Balance retrieved successfully")
+        @ns.response(401, "Unauthorized", error_response)
+        @jwt_required()
+        def get(self):
+            """Get USDT balance"""
+            try:
+                user_id = get_jwt_identity()
+                user = User.objects.get(user_id=user_id)
+
+                return {"usdt_balance": user.usdt_balance}, 200
+
+            except Exception as e:
+                return {"error": str(e)}, 500
