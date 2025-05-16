@@ -7,6 +7,7 @@ from flask_restx import Resource, Namespace, fields
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.user import User
 from app.models.usdt_transaction import USDTTransaction
+from math import ceil
 
 wallet_bp = Blueprint("wallet", __name__)
 ns = Namespace("wallet", description="Wallet operations")
@@ -34,11 +35,19 @@ def init_wallet_routes(api):
                 # 페이지네이션 파라미터
                 page = int(request.args.get("page", 1))
                 per_page = int(request.args.get("per_page", 10))
+                sort = request.args.get("sort", "desc")  # 기본값은 최신순
+
+                # 전체 거래 수 조회
+                total_transactions = USDTTransaction.objects(user=user).count()
+                total_pages = ceil(total_transactions / per_page)
+
+                # 정렬 방향 설정
+                sort_direction = "-" if sort == "desc" else ""
 
                 # 거래 내역 조회
                 transactions = (
                     USDTTransaction.objects(user=user)
-                    .order_by("-created_at")
+                    .order_by(f"{sort_direction}created_at")
                     .skip((page - 1) * per_page)
                     .limit(per_page)
                 )
@@ -47,6 +56,9 @@ def init_wallet_routes(api):
                     "transactions": [t.to_dict() for t in transactions],
                     "page": page,
                     "per_page": per_page,
+                    "total_pages": total_pages,
+                    "total_transactions": total_transactions,
+                    "sort": sort,
                 }, 200
 
             except Exception as e:

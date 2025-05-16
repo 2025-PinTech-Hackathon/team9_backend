@@ -133,6 +133,7 @@ def init_auth_routes(auth_service: AuthService, api):
                     "user": {
                         "id": str(user.id),
                         "email": user.email,
+                        "usdt_balance": user.usdt_balance,
                         "created_at": (
                             user.created_at.isoformat() if user.created_at else None
                         ),
