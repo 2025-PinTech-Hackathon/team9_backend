@@ -6,12 +6,17 @@ from mongoengine import (
     FloatField,
     ListField,
     DictField,
+    ReferenceField,
+    ObjectIdField,
 )
+from .investment import Investment
 from datetime import datetime
 from typing import Dict, Optional
+from bson import ObjectId
 
 
 class User(Document):
+    _id = ObjectIdField(primary_key=True, default=ObjectId)
     user_id = StringField(required=True, unique=True)
     email = EmailField(required=True, unique=True)
     password = StringField(required=True)
@@ -23,12 +28,20 @@ class User(Document):
     ethereum_balance = FloatField(default=0.0)
     solana_balance = FloatField(default=0.0)
 
+    # 가지고있는 Investment 목록
+    investments = ListField(ReferenceField(Investment), default=list)
+
     # 거래 내역
-    transactions = ListField(DictField(), default=list)
+    # transactions = ListField(DictField(), default=list)
 
     meta = {
         "collection": "users",
-        "indexes": [{"fields": ["email"], "unique": True}, {"fields": ["-created_at"]}],
+        "indexes": [
+            {"fields": ["email"], "unique": True},
+            {"fields": ["user_id"], "unique": True},
+            {"fields": ["-created_at"]},
+        ],
+        "allow_inheritance": False,
     }
 
     def save(self, *args, **kwargs):
@@ -45,7 +58,8 @@ class User(Document):
             "bitcoin_balance": self.bitcoin_balance,
             "ethereum_balance": self.ethereum_balance,
             "solana_balance": self.solana_balance,
-            "transactions": self.transactions,
+            "investments": [inv.to_dict() for inv in self.investments],
+            # "transactions": self.transactions,
         }
 
     @classmethod
@@ -56,5 +70,6 @@ class User(Document):
         user.bitcoin_balance = data["bitcoin_balance"]
         user.ethereum_balance = data["ethereum_balance"]
         user.solana_balance = data["solana_balance"]
-        user.transactions = data["transactions"]
+        user.investments = [Investment.from_dict(inv) for inv in data["investments"]]
+        # user.transactions = data["transactions"]
         return user

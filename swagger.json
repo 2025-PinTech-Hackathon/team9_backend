@@ -1,0 +1,647 @@
+{
+    "swagger": "2.0",
+    "basePath": "/",
+    "paths": {
+        "/auth/info": {
+            "get": {
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "User details",
+                        "schema": {
+                            "$ref": "#/definitions/UserResponse"
+                        }
+                    }
+                },
+                "summary": "Get user details and investments",
+                "operationId": "get_user",
+                "security": [
+                    {
+                        "Bearer Auth": []
+                    }
+                ],
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "responses": {
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Login successful",
+                        "schema": {
+                            "$ref": "#/definitions/AuthResponse"
+                        }
+                    }
+                },
+                "summary": "Login user",
+                "operationId": "login",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/AuthLogin"
+                        }
+                    }
+                ],
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "201": {
+                        "description": "User registered successfully",
+                        "schema": {
+                            "$ref": "#/definitions/UserResponse"
+                        }
+                    }
+                },
+                "summary": "Register a new user",
+                "operationId": "register",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/AuthRegister"
+                        }
+                    }
+                ],
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/investments": {
+            "get": {
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Investments retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/InvestmentsListResponse"
+                        }
+                    }
+                },
+                "summary": "\uc0ac\uc6a9\uc790\uc758 \ubaa8\ub4e0 \ud22c\uc790 \ubaa9\ub85d\uc744 \uc870\ud68c\ud569\ub2c8\ub2e4",
+                "operationId": "get_user_investments",
+                "tags": [
+                    "investments"
+                ]
+            },
+            "post": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "201": {
+                        "description": "Investment created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/InvestmentResponse"
+                        }
+                    }
+                },
+                "summary": "\uc0c8\ub85c\uc6b4 \ud22c\uc790\ub97c \uc0dd\uc131\ud569\ub2c8\ub2e4",
+                "operationId": "create_investment",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/Investment"
+                        }
+                    }
+                ],
+                "tags": [
+                    "investments"
+                ]
+            }
+        },
+        "/investments/coin/{coin_type}": {
+            "parameters": [
+                {
+                    "name": "coin_type",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Investments retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/InvestmentsListResponse"
+                        }
+                    }
+                },
+                "summary": "\ud2b9\uc815 \ucf54\uc778 \ud0c0\uc785\uc758 \ud22c\uc790 \ubaa9\ub85d\uc744 \uc870\ud68c\ud569\ub2c8\ub2e4",
+                "operationId": "get_investments_by_coin",
+                "tags": [
+                    "investments"
+                ]
+            }
+        },
+        "/investments/{investment_id}": {
+            "parameters": [
+                {
+                    "name": "investment_id",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "Investment not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Investment retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/InvestmentResponse"
+                        }
+                    }
+                },
+                "summary": "\ud2b9\uc815 \ud22c\uc790 \uc815\ubcf4\ub97c \uc870\ud68c\ud569\ub2c8\ub2e4",
+                "operationId": "get_investment",
+                "tags": [
+                    "investments"
+                ]
+            },
+            "put": {
+                "responses": {
+                    "404": {
+                        "description": "Investment not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Investment updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/InvestmentResponse"
+                        }
+                    }
+                },
+                "summary": "\ud22c\uc790\uc758 \uc218\uc775\uc744 \uc5c5\ub370\uc774\ud2b8\ud569\ub2c8\ub2e4",
+                "operationId": "update_investment",
+                "tags": [
+                    "investments"
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "Investment not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Investment deleted successfully"
+                    }
+                },
+                "summary": "\ud22c\uc790\ub97c \uc0ad\uc81c\ud569\ub2c8\ub2e4",
+                "operationId": "delete_investment",
+                "tags": [
+                    "investments"
+                ]
+            }
+        },
+        "/investments/{investment_id}/deposit": {
+            "parameters": [
+                {
+                    "name": "investment_id",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "post": {
+                "responses": {
+                    "404": {
+                        "description": "Investment not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Deposit successful",
+                        "schema": {
+                            "$ref": "#/definitions/InvestmentResponse"
+                        }
+                    }
+                },
+                "summary": "\ud22c\uc790\uc5d0 \ucd94\uac00 \uc785\uae08\uc744 \ud569\ub2c8\ub2e4",
+                "operationId": "add_deposit",
+                "tags": [
+                    "investments"
+                ]
+            }
+        },
+        "/investments/{investment_id}/withdraw": {
+            "parameters": [
+                {
+                    "name": "investment_id",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "post": {
+                "responses": {
+                    "404": {
+                        "description": "Investment not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Withdrawal successful",
+                        "schema": {
+                            "$ref": "#/definitions/InvestmentResponse"
+                        }
+                    }
+                },
+                "summary": "\ud22c\uc790\uc5d0\uc11c \ucd9c\uae08\uc744 \ud569\ub2c8\ub2e4",
+                "operationId": "make_withdrawal",
+                "tags": [
+                    "investments"
+                ]
+            }
+        },
+        "/wallet/addresses": {
+            "get": {
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Wallet addresses retrieved successfully"
+                    }
+                },
+                "summary": "Get fixed wallet addresses for deposits",
+                "operationId": "get_wallet_addresses",
+                "security": [
+                    {
+                        "Bearer Auth": []
+                    }
+                ],
+                "tags": [
+                    "wallet"
+                ]
+            }
+        },
+        "/wallet/balance/{coin_type}": {
+            "parameters": [
+                {
+                    "name": "coin_type",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid coin type",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Balance retrieved successfully"
+                    }
+                },
+                "summary": "Get balance for a specific coin",
+                "operationId": "get_balance",
+                "security": [
+                    {
+                        "Bearer Auth": []
+                    }
+                ],
+                "tags": [
+                    "wallet"
+                ]
+            }
+        },
+        "/wallet/deposit": {
+            "post": {
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Deposit successful",
+                        "schema": {
+                            "$ref": "#/definitions/WalletResponse"
+                        }
+                    }
+                },
+                "summary": "Make a deposit to the wallet",
+                "operationId": "make_deposit",
+                "tags": [
+                    "wallet"
+                ]
+            }
+        },
+        "/wallet/transactions": {
+            "get": {
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Transactions retrieved successfully"
+                    }
+                },
+                "summary": "Get user's transaction history",
+                "operationId": "get_transactions",
+                "security": [
+                    {
+                        "Bearer Auth": []
+                    }
+                ],
+                "tags": [
+                    "wallet"
+                ]
+            }
+        },
+        "/wallet/withdraw": {
+            "post": {
+                "responses": {
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "200": {
+                        "description": "Withdrawal successful",
+                        "schema": {
+                            "$ref": "#/definitions/WalletResponse"
+                        }
+                    }
+                },
+                "summary": "Make a withdrawal from the wallet",
+                "operationId": "make_withdrawal",
+                "tags": [
+                    "wallet"
+                ]
+            }
+        }
+    },
+    "info": {
+        "title": "Crypto Wallet API",
+        "version": "1.0",
+        "description": "API for cryptocurrency wallet operations"
+    },
+    "produces": [
+        "application/json"
+    ],
+    "consumes": [
+        "application/json"
+    ],
+    "tags": [
+        {
+            "name": "auth",
+            "description": "Authentication operations"
+        },
+        {
+            "name": "wallet",
+            "description": "Wallet operations"
+        },
+        {
+            "name": "investments",
+            "description": "Investment operations"
+        }
+    ],
+    "definitions": {
+        "AuthRegister": {
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "description": "User email"
+                },
+                "password": {
+                    "type": "string",
+                    "description": "User password"
+                }
+            },
+            "type": "object"
+        },
+        "ErrorResponse": {
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "UserResponse": {
+            "properties": {
+                "user_id": {
+                    "type": "string",
+                    "description": "User ID"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "User email"
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "User creation date"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Last update date"
+                }
+            },
+            "type": "object"
+        },
+        "AuthLogin": {
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "description": "User email"
+                },
+                "password": {
+                    "type": "string",
+                    "description": "User password"
+                }
+            },
+            "type": "object"
+        },
+        "AuthResponse": {
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "description": "JWT access token"
+                }
+            },
+            "type": "object"
+        },
+        "WalletResponse": {
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "description": "Wallet address"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Response message"
+                }
+            },
+            "type": "object"
+        },
+        "Investment": {
+            "required": [
+                "coin_type",
+                "initial_amount",
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Investment name/alias"
+                },
+                "coin_type": {
+                    "type": "string",
+                    "description": "Type of cryptocurrency (BTC/ETH/SOL)"
+                },
+                "initial_amount": {
+                    "type": "number",
+                    "description": "Initial investment amount"
+                }
+            },
+            "type": "object"
+        },
+        "InvestmentsListResponse": {
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "Response message"
+                },
+                "investments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Investment"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "InvestmentResponse": {
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "Response message"
+                },
+                "investment": {
+                    "$ref": "#/definitions/Investment"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "responses": {
+        "ParseError": {
+            "description": "When a mask can't be parsed"
+        },
+        "MaskError": {
+            "description": "When any error occurs on mask"
+        }
+    }
+}

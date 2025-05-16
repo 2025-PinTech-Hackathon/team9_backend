@@ -27,7 +27,7 @@ class AuthService:
         user.save()
 
         # Generate access token
-        access_token = create_access_token(identity=str(user.id))
+        access_token = create_access_token(identity=str(user.user_id))
 
         return {
             "message": "User registered successfully",
@@ -38,7 +38,7 @@ class AuthService:
     def login(self, email: str, password: str) -> Dict:
         """Login user"""
         # Find user by email
-        user = User.objects(email=email).first()
+        user = self.get_user_by_email(email)
         if not user:
             raise ValueError("Invalid email or password")
 
@@ -47,7 +47,7 @@ class AuthService:
             raise ValueError("Invalid email or password")
 
         # Generate access token
-        access_token = create_access_token(identity=str(user.id))
+        access_token = create_access_token(identity=user.user_id)
 
         return {
             "message": "Login successful",
@@ -57,7 +57,7 @@ class AuthService:
 
     def get_user_by_id(self, user_id: str) -> Optional[User]:
         """Get user by ID"""
-        return User.objects(id=user_id).first()
+        return User.objects(user_id=user_id).first()
 
     def get_user_by_email(self, email: str) -> Optional[User]:
         """Get user by email"""

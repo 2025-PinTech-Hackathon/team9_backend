@@ -7,11 +7,11 @@ from ..models.user import User
 class InvestmentService:
     @staticmethod
     def create_investment(
-        user: User, coin_type: str, initial_amount: float
+        name: str, coin_type: str, initial_amount: float
     ) -> Investment:
         """새로운 투자를 생성합니다."""
         investment = Investment(
-            user=user,
+            name=name,
             coin_type=coin_type,
             initial_amount=initial_amount,
             current_profit=0.0,

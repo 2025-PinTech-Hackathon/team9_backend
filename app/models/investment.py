@@ -9,11 +9,10 @@ from mongoengine import (
 )
 from datetime import datetime
 from typing import Dict, Optional
-from .user import User
 
 
 class Investment(Document):
-    user = ReferenceField(User, required=True)
+    name = StringField(required=True, description="Investment name/alias")
     coin_type = StringField(required=True, choices=["BTC", "ETH", "SOL"])
     initial_amount = FloatField(required=True)
     current_profit = FloatField(default=0.0)
@@ -27,7 +26,7 @@ class Investment(Document):
 
     meta = {
         "collection": "investments",
-        "indexes": ["user", "coin_type"],
+        "indexes": ["coin_type", "name"],
         "ordering": ["-created_at"],
     }
 
@@ -48,7 +47,7 @@ class Investment(Document):
 
         return {
             "id": str(self.id),
-            "user_id": str(self.user.id),
+            "name": self.name,
             "coin_type": self.coin_type,
             "initial_amount": self.initial_amount,
             "current_profit": self.current_profit,
@@ -60,7 +59,7 @@ class Investment(Document):
     @classmethod
     def from_dict(cls, data: Dict) -> "Investment":
         investment = cls(
-            user=data["user"],
+            name=data["name"],
             coin_type=data["coin_type"],
             initial_amount=data["initial_amount"],
             current_profit=data.get("current_profit", 0.0),
