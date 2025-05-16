@@ -10,6 +10,7 @@ from mongoengine import (
 )
 from datetime import datetime
 from typing import Dict, Optional
+from .investment_trade_history import InvestmentTradeHistory
 
 
 class Investment(Document):
@@ -28,6 +29,8 @@ class Investment(Document):
     transactions = ListField(
         DictField(), default=list, description="투자 관련 거래 내역 (입금/출금)"
     )
+
+    trade_history = ListField(ReferenceField(InvestmentTradeHistory))
 
     meta = {
         "collection": "investments",
@@ -50,6 +53,15 @@ class Investment(Document):
                 ].isoformat()
             transactions.append(transaction_copy)
 
+        trade_histories = []
+        for trade_history in self.trade_history:
+            trade_history_copy = trade_history.to_dict()
+            if isinstance(trade_history_copy.get("created_at"), datetime):
+                trade_history_copy["created_at"] = trade_history_copy[
+                    "created_at"
+                ].isoformat()
+            trade_histories.append(trade_history_copy)
+
         return {
             "id": str(self.id),
             "name": self.name,
@@ -62,6 +74,7 @@ class Investment(Document):
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "transactions": transactions,
+            "trade_history": trade_histories,
         }
 
     @classmethod

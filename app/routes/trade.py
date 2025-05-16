@@ -5,6 +5,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..services.investment_service import InvestmentService
 from ..models.user import User
 from ..models.investment import Investment
+from ..models.investment_trade_history import InvestmentTradeHistory
 from ..services.freqtrade_provider import get_freqtrade_profit
 from ..models.freqtrade_history import FreqtradeHistory
 import os
@@ -81,15 +82,24 @@ def init_trade_routes(api):
                     investment.initial_amount + investment.current_profit
                 ) / stake_amount
 
-                print(real_profit_in_this_sell)
-                print(investment_stake_ratio)
-                print(type(real_profit_in_this_sell))
-                print(type(investment_stake_ratio))
-                investment.current_profit += (
+                profit_for_this_investment = (
                     real_profit_in_this_sell * investment_stake_ratio
                 )
+                investment.current_profit += profit_for_this_investment
+
+                # 거래 이력 저장
+                trade_history = InvestmentTradeHistory(
+                    profit_amount=profit_for_this_investment
+                )
+                trade_history.save()
+
+                # investment의 trade_history에 추가
+                if not investment.trade_history:
+                    investment.trade_history = []
+                investment.trade_history.append(trade_history)
+
                 print(
-                    f"Investment of {investment.name}:\tProfit: {investment.current_profit}, Real Profit: {real_profit_in_this_sell}, Investment Stake Ratio: {investment_stake_ratio}"
+                    f"Investment of {investment.name}:\tProfit: {investment.current_profit}, Real Profit: {profit_for_this_investment}, Investment Stake Ratio: {investment_stake_ratio}"
                 )
                 investment.save()
 
