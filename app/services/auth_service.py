@@ -27,7 +27,9 @@ class AuthService:
         user.save()
 
         # Generate access token
-        access_token = create_access_token(identity=str(user.user_id))
+        access_token = create_access_token(
+            identity=str(user.user_id), expires_delta=timedelta(days=1)
+        )
 
         return {
             "message": "User registered successfully",
@@ -47,7 +49,9 @@ class AuthService:
             raise ValueError("Invalid email or password")
 
         # Generate access token
-        access_token = create_access_token(identity=user.user_id)
+        access_token = create_access_token(
+            identity=user.user_id, expires_delta=timedelta(days=1)
+        )
 
         return {
             "message": "Login successful",

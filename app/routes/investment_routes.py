@@ -180,7 +180,12 @@ def init_investment_routes(api):
             current_user = get_jwt_identity()
             data = request.json
             investment = InvestmentService.get_investment(investment_id)
-            if not investment or investment.user.id != current_user.id:
+            user = User.objects(user_id=current_user).first()
+            for inv in user.investments:
+                if inv.id == investment_id:
+                    investment = inv
+                    break
+            if not investment:
                 return {"error": "Investment not found"}, 404
 
             try:
@@ -214,7 +219,12 @@ def init_investment_routes(api):
             current_user = get_jwt_identity()
             data = request.json
             investment = InvestmentService.get_investment(investment_id)
-            if not investment or investment.user.id != current_user.id:
+            user = User.objects(user_id=current_user).first()
+            for inv in user.investments:
+                if inv.id == investment_id:
+                    investment = inv
+                    break
+            if not investment:
                 return {"error": "Investment not found"}, 404
 
             try:
