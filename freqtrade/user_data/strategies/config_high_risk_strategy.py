@@ -3,21 +3,20 @@ from freqtrade.strategy import IStrategy
 from pandas import DataFrame
 
 # --------------------------------
-import requests
+# config007.json
 import talib.abstract as ta
 import freqtrade.vendor.qtpylib.indicators as qtpylib
 import numpy as np
+import requests
 
-# config_A.json
 
-
-class StrategyA(IStrategy):
+class config_high_risk_strategy(IStrategy):
     INTERFACE_VERSION: int = 3
 
     minimal_roi = {"0": 0.035}
 
     stoploss = -0.02
-    timeframe = "4h"
+    timeframe = "1h"
     process_only_new_candles = True
     use_exit_signal = True
     exit_profit_only = False
@@ -59,24 +58,21 @@ class StrategyA(IStrategy):
 
     def populate_exit_trend(self, df: DataFrame, metadata: dict) -> DataFrame:
         df["exit_long"] = (
-            (df["rsi"] > 75)
-            | (df["close"] > df["bb_upper"])
-            | (df["ema_fast"] < df["ema_slow"])
+            (df["rsi"] > 75) | (df["close"] > df["bb_upper"]) | (df["ema_fast"] < df["ema_slow"])
         ).astype(int)
         return df
 
-    def custom_exit(
-        self, pair: str, trade, current_time, current_rate, current_profit, **kwargs
-    ):
+    def custom_exit(self, pair: str, trade, current_time, current_rate, current_profit, **kwargs):
         try:
             profit_usd = round(trade.stake_amount * current_profit, 2)
 
             requests.get(
                 "http://localhost:5000/trade/callback/sell",  # url
                 params={
-                    "risk_level": "medium",
+                    "risk_level": "high",
                     # "pair": pair,
                     "profit_usd": profit_usd,
+                    "stake_amount": trade.stake_amount,
                 },
             )
         except Exception as e:

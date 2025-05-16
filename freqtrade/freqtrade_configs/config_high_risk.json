@@ -18,7 +18,7 @@
         "unit": "minutes"
     },
     "entry_pricing": {
-        "price_side": "same",
+        "price_side": "other",
         "use_order_book": true,
         "order_book_top": 1,
         "price_last_balance": 0.0,
@@ -28,7 +28,7 @@
         }
     },
     "exit_pricing":{
-        "price_side": "same",
+        "price_side": "other",
         "use_order_book": true,
         "order_book_top": 1
     },
@@ -62,7 +62,7 @@
     "api_server": {
         "enabled": true,
         "listen_ip_address": "127.0.0.1",
-        "listen_port": 8081,
+        "listen_port": 8082,
         "verbosity": "error",
         "enable_openapi": false,
         "jwt_secret_key": "11f0d8785fe9beab144bf2f8a2d8c4afa5726124ad1cdbc2338f47d620ac8e76",
@@ -77,5 +77,5 @@
     "internals": {
         "process_throttle_secs": 5
     },
-    "strategy":"config_medium_risk_strategy"
+    "strategy":"config_high_risk_strategy"
 }

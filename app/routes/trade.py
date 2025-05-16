@@ -28,23 +28,26 @@ def init_trade_routes(api):
                 return {"message": "Invalid risk level"}, 400
 
             # Config 가져오기
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            config_path = os.path.join(
-                current_dir,
-                "..",
-                "services",
-                "freqtrade_configs",
-                f"config_{risk_level}_risk.json",
-            )
-            with open(config_path, "r") as f:
-                config = json.load(f)
-            stake_amount = config.get("stake_amount", 0)
-            if stake_amount == "unlimited":
+            # current_dir = os.path.dirname(os.path.abspath(__file__))
+            # config_path = os.path.join(
+            #     current_dir,
+            #     "..",
+            #     "freqtrade",
+            #     "freqtrade_configs",
+            #     f"config_{risk_level}_risk.json",
+            # )
+            # with open(config_path, "r") as f:
+            #     config = json.load(f)
+            stake_amount = request.args.get("stake_amount")
+
+            if isinstance(stake_amount, str) and stake_amount == "unlimited":
                 print("stake_amount is unlimited!!! Please change the config file")
                 return {"message": "Stake amount is unlimited"}, 400
+            else:
+                stake_amount = float(stake_amount)
 
             # 이번 거래로 인해 얻은 수익
-            real_profit_in_this_sell = profit_usd
+            real_profit_in_this_sell = float(profit_usd)
 
             # Get profit data from freqtrade
 
@@ -77,6 +80,11 @@ def init_trade_routes(api):
                 investment_stake_ratio = (
                     investment.initial_amount + investment.current_profit
                 ) / stake_amount
+
+                print(real_profit_in_this_sell)
+                print(investment_stake_ratio)
+                print(type(real_profit_in_this_sell))
+                print(type(investment_stake_ratio))
                 investment.current_profit += (
                     real_profit_in_this_sell * investment_stake_ratio
                 )

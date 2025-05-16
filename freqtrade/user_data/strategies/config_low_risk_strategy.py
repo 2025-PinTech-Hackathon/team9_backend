@@ -14,7 +14,7 @@ import numpy  # noqa
 # config.json
 
 
-class Strategy002(IStrategy):
+class config_low_risk_strategy(IStrategy):
     """
     Strategy 002
     author@: Gerald Lonlas
@@ -91,9 +91,7 @@ class Strategy002(IStrategy):
         dataframe["fisher_rsi"] = (numpy.exp(2 * rsi) - 1) / (numpy.exp(2 * rsi) + 1)
 
         # Bollinger bands
-        bollinger = qtpylib.bollinger_bands(
-            qtpylib.typical_price(dataframe), window=20, stds=2
-        )
+        bollinger = qtpylib.bollinger_bands(qtpylib.typical_price(dataframe), window=20, stds=2)
         dataframe["bb_lowerband"] = bollinger["lower"]
 
         # SAR Parabol
@@ -135,9 +133,7 @@ class Strategy002(IStrategy):
         ] = 1
         return dataframe
 
-    def custom_exit(
-        self, pair: str, trade, current_time, current_rate, current_profit, **kwargs
-    ):
+    def custom_exit(self, pair: str, trade, current_time, current_rate, current_profit, **kwargs):
         try:
             profit_usd = round(trade.stake_amount * current_profit, 2)
 
@@ -147,6 +143,7 @@ class Strategy002(IStrategy):
                     "risk_level": "low",
                     # "pair": pair,
                     "profit_usd": profit_usd,
+                    "stake_amount": trade.stake_amount,
                 },
             )
         except Exception as e:
