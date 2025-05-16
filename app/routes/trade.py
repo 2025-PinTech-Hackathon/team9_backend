@@ -23,6 +23,7 @@ def init_trade_routes(api):
         @ns.doc("Callback for sell from freqtrade")
         def get(self):
             risk_level = request.args.get("risk_level")
+            profit_usd = request.args.get("profit_usd")
             if risk_level not in ["low", "medium", "high"]:
                 return {"message": "Invalid risk level"}, 400
 
@@ -43,26 +44,26 @@ def init_trade_routes(api):
                 return {"message": "Stake amount is unlimited"}, 400
 
             # 이번 거래로 인해 얻은 수익
-            real_profit_in_this_sell = 0
+            real_profit_in_this_sell = profit_usd
 
             # Get profit data from freqtrade
 
-            profit_json = get_freqtrade_profit(risk_level)
+            # profit_json = get_freqtrade_profit(risk_level)
 
-            # Risk level 에서 가장 최근 FreqtradeHistory 조회
-            latest_history = (
-                FreqtradeHistory.objects.filter(risk_level=risk_level)
-                .order_by("-created_at")
-                .first()
-            )
+            # # Risk level 에서 가장 최근 FreqtradeHistory 조회
+            # latest_history = (
+            #     FreqtradeHistory.objects.filter(risk_level=risk_level)
+            #     .order_by("-created_at")
+            #     .first()
+            # )
 
-            if latest_history:
-                real_profit_in_this_sell = (
-                    profit_json.get("profit_closed_fiat", 0)
-                    - latest_history.profit_closed_fiat
-                )
-            else:
-                real_profit_in_this_sell = profit_json.get("profit_closed_fiat", 0)
+            # if latest_history:
+            #     real_profit_in_this_sell = (
+            #         profit_json.get("profit_closed_fiat", 0)
+            #         - latest_history.profit_closed_fiat
+            #     )
+            # else:
+            #     real_profit_in_this_sell = profit_json.get("profit_closed_fiat", 0)
 
             # 선택한 risk_level 에 해당하는 모든 investment 가져옴
             investments: List[Investment] = Investment.objects.filter(
@@ -88,7 +89,7 @@ def init_trade_routes(api):
             history = FreqtradeHistory(
                 risk_level=risk_level,
                 real_profit_in_this_sell=real_profit_in_this_sell,
-                **profit_json,
+                # **profit_json,
             )
             history.save()
 
