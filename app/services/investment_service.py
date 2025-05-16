@@ -7,12 +7,16 @@ from ..models.user import User
 class InvestmentService:
     @staticmethod
     def create_investment(
-        name: str, coin_type: str, initial_amount: float
+        name: str,
+        coin_type: str,
+        risk_level: str,
+        initial_amount: float,
     ) -> Investment:
         """새로운 투자를 생성합니다."""
         investment = Investment(
             name=name,
             coin_type=coin_type,
+            risk_level=risk_level,
             initial_amount=initial_amount,
             current_profit=0.0,
         )
@@ -117,3 +121,63 @@ class InvestmentService:
             return None
         except ValueError as e:
             raise e
+
+    @staticmethod
+    def get_all_investments() -> List[Investment]:
+        """모든 투자 목록을 조회합니다."""
+        return list(Investment.objects.all())
+
+    @staticmethod
+    def get_investments_by_risk_level(risk_level: str) -> List[Investment]:
+        """특정 위험 수준의 투자 목록을 조회합니다."""
+        return list(Investment.objects(risk_level=risk_level))
+
+    @staticmethod
+    def update_investment(
+        investment_id: str,
+        name: Optional[str] = None,
+        coin_type: Optional[str] = None,
+        risk_level: Optional[str] = None,
+        initial_amount: Optional[float] = None,
+        current_profit: Optional[float] = None,
+    ) -> Optional[Investment]:
+        investment = Investment.objects(id=investment_id).first()
+        if not investment:
+            return None
+
+        if name is not None:
+            investment.name = name
+        if coin_type is not None:
+            investment.coin_type = coin_type
+        if risk_level is not None:
+            investment.risk_level = risk_level
+        if initial_amount is not None:
+            investment.initial_amount = initial_amount
+        if current_profit is not None:
+            investment.current_profit = current_profit
+
+        investment.save()
+        return investment
+
+    @staticmethod
+    def add_transaction(
+        investment_id: str,
+        transaction_type: str,
+        amount: float,
+        price: float,
+        created_at: Optional[datetime] = None,
+    ) -> Optional[Investment]:
+        investment = Investment.objects(id=investment_id).first()
+        if not investment:
+            return None
+
+        transaction = {
+            "type": transaction_type,
+            "amount": amount,
+            "price": price,
+            "created_at": created_at or datetime.utcnow(),
+        }
+
+        investment.transactions.append(transaction)
+        investment.save()
+        return investment

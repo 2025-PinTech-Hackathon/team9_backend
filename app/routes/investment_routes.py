@@ -56,10 +56,12 @@ def init_investment_routes(api):
             current_user = get_jwt_identity()
             user = User.objects(user_id=current_user).first()
             data = request.json
+            risk_level = data.get("risk_level", "medium")
             investment = InvestmentService.create_investment(
                 name=data["name"],
                 coin_type=data["coin_type"],
                 initial_amount=data["initial_amount"],
+                risk_level=risk_level,
             )
             user.investments.append(investment)
             user.save()

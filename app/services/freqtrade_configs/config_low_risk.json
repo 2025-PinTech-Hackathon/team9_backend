@@ -55,7 +55,7 @@
         }
     ],
     "telegram": {
-        "enabled": true,
+        "enabled": false,
         "token": "",
         "chat_id": ""
     },
@@ -68,8 +68,8 @@
         "jwt_secret_key": "11f0d8785fe9beab144bf2f8a2d8c4afa5726124ad1cdbc2338f47d620ac8e76",
         "ws_token": "xFgH-Q2MLCIkI-zYVIiVLldR1jTjzYjArQ",
         "CORS_origins": [],
-        "username": "",
-        "password": ""
+        "username": "admin",
+        "password": "admin"
     },
     "bot_name": "freqtrade",
     "initial_state": "running",

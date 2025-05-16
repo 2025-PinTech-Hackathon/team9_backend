@@ -8,6 +8,7 @@ from app.services.wallet_service import WalletService
 from app.routes.auth import auth_bp, init_auth_routes
 from app.routes.wallet import wallet_bp, init_wallet_routes
 from app.routes.investment_routes import investment_bp, init_investment_routes
+from app.routes.trade import trade_bp, init_trade_routes
 from app.schemas import init_schemas
 import os
 from dotenv import load_dotenv
@@ -61,6 +62,7 @@ def create_app():
     init_auth_routes(auth_service, api)
     init_wallet_routes(api)
     init_investment_routes(api)
+    init_trade_routes(api)
 
     # Configure Swagger UI
     app.config["SWAGGER_UI_DOC_EXPANSION"] = "list"

@@ -30,6 +30,8 @@ def turn_on_freqtrade_bot(risk_level: str):
 
 
 def get_freqtrade_bot(risk_level: str) -> FtRestClient:
+    if risk_level not in ["low", "medium", "high"]:
+        raise ValueError("Invalid risk level")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(
         current_dir, "freqtrade_configs", f"config_{risk_level}_risk.json"
@@ -40,10 +42,12 @@ def get_freqtrade_bot(risk_level: str) -> FtRestClient:
 
     server_hostname = config["api_server"]["listen_ip_address"]
     server_port = config["api_server"]["listen_port"]
+    username = config["api_server"]["username"]
+    password = config["api_server"]["password"]
 
     server_url = f"http://{server_hostname}:{server_port}"
 
-    rest_client = FtRestClient(server_url)
+    rest_client = FtRestClient(server_url, username, password)
     return rest_client
 
 

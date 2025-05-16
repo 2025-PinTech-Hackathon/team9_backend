@@ -14,7 +14,9 @@ from typing import Dict, Optional
 class Investment(Document):
     name = StringField(required=True, description="Investment name/alias")
     coin_type = StringField(required=True, choices=["BTC", "ETH", "SOL"])
+    risk_level = StringField(required=True, choices=["low", "medium", "high"])
     initial_amount = FloatField(required=True)
+
     current_profit = FloatField(default=0.0)
     created_at = DateTimeField(default=datetime.utcnow)
     updated_at = DateTimeField(default=datetime.utcnow)
@@ -26,7 +28,7 @@ class Investment(Document):
 
     meta = {
         "collection": "investments",
-        "indexes": ["coin_type", "name"],
+        "indexes": ["coin_type", "name", "risk_level"],
         "ordering": ["-created_at"],
     }
 
@@ -49,6 +51,7 @@ class Investment(Document):
             "id": str(self.id),
             "name": self.name,
             "coin_type": self.coin_type,
+            "risk_level": self.risk_level,
             "initial_amount": self.initial_amount,
             "current_profit": self.current_profit,
             "created_at": self.created_at.isoformat(),
@@ -61,6 +64,7 @@ class Investment(Document):
         investment = cls(
             name=data["name"],
             coin_type=data["coin_type"],
+            risk_level=data["risk_level"],
             initial_amount=data["initial_amount"],
             current_profit=data.get("current_profit", 0.0),
         )
