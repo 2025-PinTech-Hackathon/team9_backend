@@ -24,8 +24,11 @@ def init_investment_routes(api):
             "initial_amount": fields.Float(
                 required=True, description="Initial investment amount"
             ),
-            "entry_price_usdt": fields.Float(
-                required=True, description="Entry price in USDT"
+            "risk_level": fields.String(
+                required=True, description="Risk level (low/medium/high)"
+            ),
+            "internal_position": fields.Integer(
+                required=False, description="Internal position"
             ),
         },
     )
