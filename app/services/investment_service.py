@@ -16,6 +16,17 @@ class InvestmentService:
         user: User,
     ) -> Investment:
         """새로운 투자를 생성합니다."""
+        # 동일한 name과 internal_position을 가진 투자가 있는지 확인
+        existing_investment = None
+
+        for inv in user.investments:
+            if inv.internal_position == internal_position:
+                existing_investment = inv
+                break
+
+        if existing_investment:
+            raise ValueError("이미 동일한 이름과 포지션을 가진 투자가 존재합니다.")
+
         # 사용자의 USDT 잔액 확인
         if user.usdt_balance < initial_amount:
             raise ValueError("잔액이 부족합니다.")
@@ -204,3 +215,16 @@ class InvestmentService:
         investment.transactions.append(transaction)
         investment.save()
         return investment
+
+    @staticmethod
+    def get_investment_by_email_and_position(
+        email: str, internal_position: int
+    ) -> Optional[Investment]:
+        """사용자 이메일과 internal_position으로 투자 정보를 조회합니다."""
+        try:
+            user = User.objects.get(email=email)
+            return Investment.objects.get(
+                user=user, internal_position=internal_position
+            )
+        except (User.DoesNotExist, Investment.DoesNotExist):
+            return None

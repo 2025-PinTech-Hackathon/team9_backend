@@ -1,9 +1,10 @@
-from flask import request
+from flask import request, jsonify
 from flask import Blueprint
 from flask_restx import Resource, Namespace, fields
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..services.investment_service import InvestmentService
 from ..models.user import User
+from ..models.investment import Investment
 
 investment_bp = Blueprint("investments", __name__)
 ns = Namespace("investments", description="Investment operations")
@@ -227,3 +228,147 @@ def init_investment_routes(api):
                 return {"error": str(e)}, 400
             except Exception as e:
                 return {"error": str(e)}, 500
+
+    @ns.route("/get_investment_by_email_position", methods=["GET"])
+    class GetInvestmentByEmailPosition(Resource):
+        @ns.doc("get_investment_by_email_position")
+        @ns.response(200, "Investment retrieved successfully", investment_response)
+        @ns.response(
+            400, "Invalid input", api.model("ErrorResponse", {"error": fields.String()})
+        )
+        @ns.response(
+            404,
+            "Investment not found",
+            api.model("ErrorResponse", {"error": fields.String()}),
+        )
+        @ns.response(
+            500, "Server error", api.model("ErrorResponse", {"error": fields.String()})
+        )
+        def get(self):
+            """이메일과 internal_position으로 투자 정보를 조회하는 API"""
+            try:
+                email = request.args.get("email")
+                internal_position = request.args.get("internal_position")
+
+                if not email or not internal_position:
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "message": "이메일과 internal_position이 필요합니다.",
+                            }
+                        ),
+                        400,
+                    )
+
+                try:
+                    internal_position = int(internal_position)
+                except ValueError:
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "message": "internal_position은 숫자여야 합니다.",
+                            }
+                        ),
+                        400,
+                    )
+
+                user = User.objects(email=email).first()
+                investment: Investment = None
+                for inv in user.investments:
+                    if inv.internal_position == internal_position:
+                        investment = inv
+                        break
+
+                if not investment:
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "message": "투자 정보를 찾을 수 없습니다.",
+                            }
+                        ),
+                        404,
+                    )
+
+                return (
+                    jsonify(
+                        {
+                            "success": True,
+                            "data": investment.to_dict(),
+                        }
+                    ),
+                    200,
+                )
+
+            except Exception as e:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": f"서버 오류가 발생했습니다: {str(e)}",
+                        }
+                    ),
+                    500,
+                )
+
+    @ns.route("/get_investment_by_position", methods=["GET"])
+    class GetInvestmentByPosition(Resource):
+        @ns.doc("get_investment_by_position")
+        @ns.response(200, "Investment retrieved successfully", investment_response)
+        @ns.response(
+            400, "Invalid input", api.model("ErrorResponse", {"error": fields.String()})
+        )
+        @ns.response(
+            404,
+            "Investment not found",
+            api.model("ErrorResponse", {"error": fields.String()}),
+        )
+        @ns.response(
+            500, "Server error", api.model("ErrorResponse", {"error": fields.String()})
+        )
+        @jwt_required()
+        def get(self):
+            """internal_position으로 투자 정보를 조회하는 API"""
+            try:
+                internal_position = request.args.get("internal_position")
+                current_user = get_jwt_identity()
+                user = User.objects(user_id=current_user).first()
+
+                if not internal_position:
+                    return {
+                        "success": False,
+                        "message": "internal_position이 필요합니다.",
+                    }, 400
+
+                try:
+                    internal_position = int(internal_position)
+                except ValueError:
+                    return {
+                        "success": False,
+                        "message": "internal_position은 숫자여야 합니다.",
+                    }, 400
+
+                investment: Investment = None
+                for inv in user.investments:
+                    if inv.internal_position == internal_position:
+                        investment = inv
+                        break
+
+                if not investment:
+                    return {
+                        "success": False,
+                        "message": "투자 정보를 찾을 수 없습니다.",
+                    }, 404
+
+                return {
+                    "success": True,
+                    "data": investment.to_dict(),
+                }, 200
+
+            except Exception as e:
+                return {
+                    "success": False,
+                    "message": f"서버 오류가 발생했습니다: {str(e)}",
+                }, 500
