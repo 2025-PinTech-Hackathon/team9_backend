@@ -179,27 +179,50 @@ def init_investment_routes(api):
             """투자에 추가 입금을 합니다."""
             current_user = get_jwt_identity()
             data = request.json
-            investment = InvestmentService.get_investment(investment_id)
             user = User.objects(user_id=current_user).first()
-            for inv in user.investments:
-                if inv.id == investment_id:
-                    investment = inv
-                    break
+
+            if not user:
+                return {"error": "사용자를 찾을 수 없습니다."}, 404
+
+            investment = InvestmentService.get_investment(investment_id)
+            # for inv in user.investments:
+            #     if inv.id == investment_id:
+            #         investment = inv
+            #         break
+
             if not investment:
-                return {"error": "Investment not found"}, 404
+                return {"error": "투자를 찾을 수 없습니다."}, 404
 
             try:
+                amount = float(data["amount"])
+                if amount <= 0:
+                    return {"error": "입금 금액은 0보다 커야 합니다."}, 400
+
+                if user.usdt_balance < amount:
+                    return {"error": "잔액이 부족합니다."}, 400
+
+                # 사용자 잔액 차감
+                user.usdt_balance -= amount
+                user.save()
+
+                # 투자 입금 처리
                 investment = InvestmentService.add_deposit(
                     investment_id=investment_id,
-                    amount=data["amount"],
+                    amount=amount,
                     description=data.get("description", "Additional deposit"),
                 )
+
                 return {
-                    "message": "Deposit successful",
+                    "message": "입금이 성공적으로 완료되었습니다.",
                     "investment": investment.to_dict(),
                 }
-            except Exception as e:
+            except ValueError as e:
                 return {"error": str(e)}, 400
+            except Exception as e:
+                # 오류 발생 시 사용자 잔액 롤백
+                # user.amount += amount
+                # user.save()
+                return {"error": f"입금 처리 중 오류가 발생했습니다: {str(e)}"}, 500
 
     @ns.route("/<investment_id>/withdraw")
     class InvestmentWithdrawal(Resource):
@@ -218,29 +241,50 @@ def init_investment_routes(api):
             """투자에서 출금을 합니다."""
             current_user = get_jwt_identity()
             data = request.json
-            investment = InvestmentService.get_investment(investment_id)
             user = User.objects(user_id=current_user).first()
-            for inv in user.investments:
-                if inv.id == investment_id:
-                    investment = inv
-                    break
+
+            if not user:
+                return {"error": "사용자를 찾을 수 없습니다."}, 404
+
+            investment = InvestmentService.get_investment(investment_id)
+            # for inv in user.investments:
+            #     if inv.id == investment_id:
+            #         investment = inv
+            #         break
+
             if not investment:
-                return {"error": "Investment not found"}, 404
+                return {"error": "투자를 찾을 수 없습니다."}, 404
 
             try:
+                amount = float(data["amount"])
+                if amount <= 0:
+                    return {"error": "출금 금액은 0보다 커야 합니다."}, 400
+
+                # if investment.current_amount < amount:
+                #     return {"error": "투자 금액이 부족합니다."}, 400
+
+                # 투자 출금 처리
                 investment = InvestmentService.make_withdrawal(
                     investment_id=investment_id,
-                    amount=data["amount"],
+                    amount=amount,
                     description=data.get("description", "Withdrawal"),
                 )
+
+                # 사용자 잔액 증가
+                user.usdt_balance += amount
+                user.save()
+
                 return {
-                    "message": "Withdrawal successful",
+                    "message": "출금이 성공적으로 완료되었습니다.",
                     "investment": investment.to_dict(),
                 }
             except ValueError as e:
                 return {"error": str(e)}, 400
             except Exception as e:
-                return {"error": str(e)}, 500
+                # 오류 발생 시 사용자 잔액 롤백
+                # user.amount -= amount
+                # user.save()
+                return {"error": f"출금 처리 중 오류가 발생했습니다: {str(e)}"}, 500
 
     @ns.route("/get_investment_by_email_position", methods=["GET"])
     class GetInvestmentByEmailPosition(Resource):
